@@ -27,8 +27,12 @@ public class ClientBootstrap extends AbstractBootstrap {
 
     @Override
     public void doInit() {
+        //初始化客户端
+        //调用ClientHandler
         this.nettyClient = new NettyClient(config);
+        //初始化代理工厂
         this.proxyFactory = new ProxyFactory(this.nettyClient);
+        //初始化引用 Class<?>, Object
         initReference();
     }
     @Override
@@ -42,8 +46,10 @@ public class ClientBootstrap extends AbstractBootstrap {
     }
 
     private void initReference() {
+        //存储引用的类和对应的代理对象。
         Map<Class<?>, Object> referencesTmp = new HashMap<>();
 
+        //通过 config.getRefClasses() 方法获取配置中的引用类列表 refClasses。
         List<Class<?>> refClasses = config.getRefClasses();
         for (Class<?> refClass : refClasses) {
             Object proxy = proxyFactory.newProxy(refClass);
@@ -56,6 +62,7 @@ public class ClientBootstrap extends AbstractBootstrap {
     @SuppressWarnings("unchecked")
     public <T> T getReference(Class<T> clazz) {
         checkRunning();
+        //获取引用的对象 Map<Class<?>, Object>
         Object o = references.get(clazz);
         if (Objects.isNull(o)) {
             throw new NullPointerException("no such service: " + clazz);

@@ -18,6 +18,7 @@ public class FastJsonSerializer implements Serializer {
     @Override
     public void write(Object o, OutputStream out) {
         try {
+            // 调用FastJson的writeJSONString方法将对象o序列化为JSON字符串（序列化时写入类名信息。）
             JSON.writeJSONString(out, o, SerializerFeature.WriteClassName);
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -27,6 +28,7 @@ public class FastJsonSerializer implements Serializer {
     @Override
     public <T> T read(Class<T> clazz, InputStream in) {
         try {
+            //支持自动类型识别。
             return JSON.parseObject(in, clazz, Feature.SupportAutoType);
         } catch (IOException e) {
             throw new RuntimeException(e);

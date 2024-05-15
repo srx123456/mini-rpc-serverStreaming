@@ -25,6 +25,7 @@ public abstract class AbstractBootstrap {
     }
 
     public void init() {
+        //将 lifeCycle 的值从 NEW（-1）设置为 INIT（0）。
         if (!lifeCycle.compareAndSet(NEW, INIT)) {
             return;
         }

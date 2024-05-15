@@ -30,15 +30,18 @@ public class ServiceInvoker {
         this.services = config.getServices();
     }
 
+    //根据请求调用相应的服务方法。
     public Object invoke(Request request, Channel channel) {
         Class<?> clazz = request.getClazz();
         Object service = Objects.requireNonNull(services.get(clazz), "no provider");
         try {
             Method method = getMethod(service.getClass(), request.getMethod());
             Object[] args = getArgs(request.getData());
+            // 如果请求不是流式请求，则直接调用方法并返回结果。
             if (!request.isStream()) {
                 return method.invoke(service, args);
             } else {
+                //调用 processStreamRequest 方法处理流式请求
                 return processStreamRequest(request, channel, service, method, args);
             }
         } catch (InvocationTargetException | IllegalAccessException e) {

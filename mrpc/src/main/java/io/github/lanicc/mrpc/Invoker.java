@@ -28,11 +28,12 @@ public class Invoker implements MethodInterceptor {
         this.nettyClient = nettyClient;
     }
 
+    //一个方法拦截器的实现，用于拦截指定类的方法调用
     @Override
     public Object intercept(Object obj, Method method, Object[] args, MethodProxy proxy) throws Throwable {
         if (Objects.equals(method.getDeclaringClass(), clazz)) {
             Request request = initRequest(new Request(), method, args);
-
+            //如果请求对象不是流式调用，则通过网络客户端发送异步请求，并等待3秒钟获取响应结果，然后返回响应数据。
             if (!request.isStream()) {
                 CompletableFuture<Response> future = nettyClient.requestAsync(request);
                 return future.get(3, TimeUnit.SECONDS).getData();
@@ -44,6 +45,7 @@ public class Invoker implements MethodInterceptor {
         throw new UnsupportedOperationException(method.getName());
     }
 
+    //初始化一个请求对象
     private Request initRequest(Request request, Method method, Object[] args) {
         request.setMethod(method.getName());
         request.setClazz(clazz);
@@ -53,11 +55,13 @@ public class Invoker implements MethodInterceptor {
                 request.setStreamObserver((StreamObserver<?>) args[0]);
                 request.setStream(true);
             }
+            // 请求对象是流式调用
             if (request.isStream()) {
                 Object[] args1 = new Object[args.length];
                 System.arraycopy(args, 0, args1, 0, args.length);
                 args1[0] = null;
                 request.setData(args1);
+            // 如果请求对象不是流式调用，则设置请求数据为args
             } else {
                 request.setData(args);
             }

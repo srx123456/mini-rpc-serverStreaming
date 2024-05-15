@@ -45,13 +45,16 @@ public class NettyClient {
     }
 
     private void init() {
+        //处理I/O操作的多线程事件循环器。
         group = new NioEventLoopGroup();
-
+        //设置最大并发请求数。
         clientHandler = new ClientHandler(20);
+        //序列化和反序列化请求和响应。
         protoCodec = new ProtoCodec(config.getSerializer());
         connectFuture =
                 new Bootstrap()
                         .channel(NioSocketChannel.class)
+                        //禁用Nagle算法，提高网络传输效率。
                         .option(ChannelOption.TCP_NODELAY, true)
                         .handler(new ChannelInitializer<SocketChannel>() {
                             @Override
@@ -60,16 +63,19 @@ public class NettyClient {
                                         .addLast(new LengthFieldBasedFrameDecoder(1024 * 1024 * 1024, 0, 4, 0, 4))
                                         .addLast(new LengthFieldPrepender(4))
                                         .addLast(protoCodec)
+                                        //真实的client处理
                                         .addLast(clientHandler);
                             }
 
                         })
                         .group(group)
+                        //EventLoopGroup对象连接到服务器。
                         .connect(config.getServerSocketAddr());
     }
 
     public void start() {
         try {
+            //同步等待连接成功
             channel = connectFuture.sync().channel();
         } catch (InterruptedException e) {
             throw new RuntimeException(e);

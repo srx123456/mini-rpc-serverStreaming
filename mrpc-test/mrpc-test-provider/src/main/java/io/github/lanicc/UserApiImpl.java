@@ -41,12 +41,14 @@ public class UserApiImpl implements UserApi {
         return new ArrayList<>(users.values());
     }
 
+    // 迭代所有用户，并将每个用户通过userStreamObserver发送给客户端。
     @Override
     public void iterate(StreamObserver<User> userStreamObserver) {
         logger.info("iterate all user: {}", userStreamObserver.getClass());
 
         try {
             for (User user : users.values()) {
+                // 调用userStreamObserver.onNext(user)方法，将当前用户发送给客户端。
                 userStreamObserver.onNext(user);
                 try {
                     TimeUnit.SECONDS.sleep(1);
@@ -55,6 +57,7 @@ public class UserApiImpl implements UserApi {
                 }
             }
         } finally {
+            // 调用userStreamObserver.onCompleted()方法，通知客户端迭代完成。
             userStreamObserver.onCompleted();
         }
     }

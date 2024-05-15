@@ -61,24 +61,32 @@ public class ClientHandler extends SimpleChannelInboundHandler<Protocol> {
         return maxWaitSize - throttle.availablePermits();
     }
 
+    //处理从服务器返回的消息。
     @Override
     protected void channelRead0(ChannelHandlerContext channelHandlerContext, Protocol protocol) throws Exception {
+        //是StreamResponseMessage类型，则调用processStream方法进行处理。
         if (protocol instanceof StreamResponseMessage) {
             processStream((StreamResponseMessage) protocol);
             return;
         }
 
         long requestId = protocol.getRequestId();
+        //根据requestId从completableFutureMap中获取对应的CompletableFuture对象。
         CompletableFuture future = completableFutureMap.remove(requestId);
+        //接收到的消息作为结果完成该CompletableFuture对象。
         future.complete(protocol);
         throttle.release();
     }
 
     private void processStream(StreamResponseMessage streamResponseMessage) {
+        //根据streamResponseMessage中的requestId从streamObserverMap中获取对应的StreamObserver对象。
         StreamObserver observer = streamObserverMap.get(streamResponseMessage.getRequestId());
         if (!streamResponseMessage.isComplete()) {
+            //将消息数据传递给StreamObserver对象的onNext()方法进行处理。
             observer.onNext(streamResponseMessage.getData());
         } else {
+            //streamObserverMap中移除对应的requestId，
+            // 然后调用observer.onCompleted()方法通知StreamObserver对象流式处理已完成。
             streamObserverMap.remove(streamResponseMessage.getRequestId());
             observer.onCompleted();
         }
